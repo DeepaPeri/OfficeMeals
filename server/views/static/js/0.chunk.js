@@ -13830,7 +13830,7 @@ object-assign
                   var firstChild = div.firstChild;
                   domElement = div.removeChild(firstChild);
                 } else if (typeof props.is === "string") {
-                  // $FlowIssue `createElement` should be updated for Web Components
+                  // $FlowIssue `createElement` should be updated for Web components
                   domElement = ownerDocument.createElement(type, {
                     is: props.is
                   });

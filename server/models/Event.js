@@ -1,8 +1,9 @@
 let mongoose = require("mongoose");
 let Schema = mongoose.Schema;
-
+let SubTaskSchema = require("./Category").SubTaskSchema;
 let EventSchema = new mongoose.Schema({
   eventId: String,
+  slug: String,
   name: String,
   category: { type: Schema.Types.ObjectId, ref: "Category" },
   locations: [{ type: Schema.Types.ObjectId, ref: "Location" }],
@@ -21,8 +22,9 @@ let EventSchema = new mongoose.Schema({
       end: Date
     }
   ],
-  isPublished: Boolean,
-  isActive: Boolean,
+  subTasks: [SubTaskSchema],
+  isPublished: { type: Boolean, default: false },
+  isActive: { type: Boolean, default: true },
   isMultiSession: Boolean,
   nominations: [{ type: Schema.Types.ObjectId, ref: "User" }],
   createdAt: { type: Date, default: new Date() },

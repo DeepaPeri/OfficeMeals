@@ -2,20 +2,14 @@ let express = require("express");
 
 let router = express.Router();
 let User = require("../models/User");
+let envConfig = require("../config/env");
 
 router.post("/google-login", (req, res, next) => {
   const profile = req.body;
-  /**
-     * email: "devesh.singhal@accoliteindia.com"
-     familyName: "Singhal"
-     givenName: "Devesh"
-     googleId: "117325899339878257142"
-     imageUrl: "https://lh5.googleusercontent.com/-udlSWBvG9CU/AAAAAAAAAAI/AAAAAAAAAAo/IdLGjQ4NEsU/s96-c/photo.jpg"
-     name: "Devesh Singhal"
-     */
   User.findOne({ email: profile.email }, (err, person) => {
     if (err) {
       res.locals.responseObj = {
+        status: 500,
         err: err,
         data: {},
         msg: "Something went Wrong!!"
@@ -23,50 +17,94 @@ router.post("/google-login", (req, res, next) => {
       next();
     } else {
       if (person) {
-        req.session.user = person;
-        const userForFrontEnd = {
-          name: person.name,
-          email: person.email
-        };
-        res.locals.responseObj = {
-          err: err,
-          data: { user: userForFrontEnd, sessionID: req.sessionID },
-          msg: "Login Successful"
-        };
-        next();
-      } else {
-        let user = new User({
-          name: {
-            familyName: profile.familyName,
-            givenName: profile.givenName
-          },
-          isActive: true,
-          email: profile.email,
-          imageUrl: profile.imageUrl,
-          roles: ["employee"]
-        });
-        user.save((err, person) => {
-          if (!err && person) {
-            req.session.user = person;
+        if (!person.isRegistered) {
+          person.set({
+            name: {
+              familyName: profile.familyName,
+              givenName: profile.givenName
+            },
+            isActive: true,
+            isRegistered: true,
+            imageUrl: profile.imageUrl,
+            roles: ["employee"]
+          });
+          person.save((err, newPerson) => {
+            req.session.user = newPerson;
             const userForFrontEnd = {
-              name: person.name,
-              email: person.email
+              name: newPerson.name,
+              email: newPerson.email,
+              roles: newPerson.roles
             };
             res.locals.responseObj = {
-              err: null,
+              status: 200,
+              err: err,
               data: { user: userForFrontEnd, sessionID: req.sessionID },
               msg: "Login Successful"
             };
             next();
-          } else {
-            res.locals.responseObj = {
-              err: err,
-              data: null,
-              msg: "Login Failed"
-            };
-            next();
-          }
-        });
+          });
+        } else {
+          req.session.user = person;
+          const userForFrontEnd = {
+            name: person.name,
+            email: person.email,
+            roles: person.roles
+          };
+          res.locals.responseObj = {
+            status: 200,
+            err: err,
+            data: { user: userForFrontEnd, sessionID: req.sessionID },
+            msg: "Login Successful"
+          };
+          next();
+        }
+      } else {
+        let emailDomain = profile.email.split("@");
+        if (envConfig.allowedDomains.indexOf(emailDomain[1]) > -1) {
+          let user = new User({
+            name: {
+              familyName: profile.familyName,
+              givenName: profile.givenName
+            },
+            isActive: true,
+            email: profile.email,
+            imageUrl: profile.imageUrl,
+            roles: ["employee"]
+          });
+          user.save((err, person) => {
+            if (!err && person) {
+              req.session.user = person;
+              const userForFrontEnd = {
+                name: person.name,
+                email: person.email,
+                roles: person.roles
+              };
+              res.locals.responseObj = {
+                status: 200,
+                err: null,
+                data: { user: userForFrontEnd, sessionID: req.sessionID },
+                msg: "Login Successful"
+              };
+              next();
+            } else {
+              res.locals.responseObj = {
+                status: 500,
+                err: err,
+                data: null,
+                msg: "Login Failed"
+              };
+              next();
+            }
+          });
+        } else {
+          res.locals.responseObj = {
+            status: 401,
+            err: "NOT AUTHORIZED",
+            data: null,
+            msg: "You are not authorized to login."
+          };
+          next();
+        }
       }
     }
   });

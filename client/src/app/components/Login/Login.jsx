@@ -7,24 +7,36 @@ class Login extends Component {
   successCB(response) {
     post('/api/auth/google-login', JSON.stringify(response.profileObj)).then(
       data => {
-        console.log(data);
-        sessionStorage.setItem('sessionID', data.data.sessionID);
-        sessionStorage.setItem('userData', JSON.stringify(data.data.user));
-        window.location.reload();
+        if (data.status === 200) {
+          sessionStorage.setItem('sessionID', data.data.sessionID);
+          sessionStorage.setItem('userData', JSON.stringify(data.data.user));
+          window.location.reload();
+        } else {
+          alert(data.msg);
+        }
       }
     );
   }
 
   failureCB(response) {
-    // #
+    // alert("something went wrong!!")
   }
 
-  handleLogout(event) {
+  handleLogout(e) {
     get('/api/auth/google-logout').then(() => {
       sessionStorage.removeItem('sessionID');
       sessionStorage.removeItem('userData');
       window.location.reload();
     });
+  }
+
+  getClientId() {
+    const env = process.env.NODE_ENV;
+    const config = {
+      development:
+        '1007995560664-p1u3icnpn86qdbbrjj136hi7o48311n1.apps.googleusercontent.com'
+    };
+    return config[env];
   }
 
   getWelcomeString() {
@@ -49,7 +61,7 @@ class Login extends Component {
     } else {
       welcomeString = (
         <GoogleLogin
-          clientId="1007995560664-p1u3icnpn86qdbbrjj136hi7o48311n1.apps.googleusercontent.com"
+          clientId={this.getClientId()}
           buttonText="Login"
           onSuccess={this.successCB}
           onFailure={this.failureCB}

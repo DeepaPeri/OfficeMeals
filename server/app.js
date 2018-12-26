@@ -11,16 +11,13 @@ let envConfig = require("./config/env");
 let cors = require("cors");
 
 let responseHandler = require("./util/responseHandler").Response;
+let isLoggedIn = require("./util/middlewares").isLoggedIn;
+// let isAdmin = require("./util/middlewares").isAdmin;
+let aclLookup = require("./util/middlewares").aclLookup;
 
 let UsersController = require("./controllers/users");
-let EventsController = require("./controllers/events");
 let AuthController = require("./controllers/auth");
-let LocationsController = require("./controllers/locations");
-let CategoriesController = require("./controllers/categories");
 
-let isLoggedIn = require("./util/middlewares").isLoggedIn;
-let isAdmin = require("./util/middlewares").isAdmin;
-let acl = require("./util/middlewares").aclLookup;
 let app = express();
 
 let server = require("http").Server(app);
@@ -30,9 +27,7 @@ let socket = require("./util/socket");
 socket.setSocket(io);
 
 app.set("views", __dirname + "/views");
-app.set("view engine", "jsx");
-app.engine("jsx", require("express-react-views").createEngine());
-//app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
+app.set("view engine", "ejs");
 
 app.use(
   require("express-session")({
@@ -66,10 +61,7 @@ app.use(function(req, res, next) {
 app.use(cors({ origin: [envConfig.frontEnd], credentials: true }));
 
 // ----------------------------------------------- APIs Handlers Start ------------------------------
-app.use("/api/events", EventsController, responseHandler);
-app.use("/api/users", UsersController, responseHandler);
-app.use("/api/locations", LocationsController, responseHandler);
-app.use("/api/categories", CategoriesController, responseHandler);
+app.use("/api/users", isLoggedIn, aclLookup, UsersController, responseHandler);
 app.use("/api/auth", AuthController, responseHandler);
 // ----------------------------------------------- APIs Handlers End ------------------------------
 
@@ -91,7 +83,6 @@ app.use(function(err, req, res, next) {
   // set locals, only providing error in development
   res.locals.message = err.message;
   res.locals.error = req.app.get("env") === "development" ? err : {};
-
   // render the error page
   res.status(err.status || 500);
   res.json({ error: err });

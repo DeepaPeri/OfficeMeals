@@ -11,7 +11,8 @@ let UserSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now },
   isActive: { type: Boolean, default: false },
   isAdmin: { type: Boolean, default: false },
-  roles: [String]
+  isRegistered: { type: Boolean, default: true },
+  roles: [String] // HR, employee, trainer, admin
 });
 
 let User = mongoose.model("User", UserSchema);

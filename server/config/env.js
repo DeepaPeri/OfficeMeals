@@ -1,6 +1,6 @@
-let env = process.env.NODE_ENV || "local";
+let env = process.env.NODE_ENV || "development";
 let envConfig = {
-  local: {
+  development: {
     siteUrl: "http://localhost:3300",
     port: 3300,
     frontEnd: "http://localhost:3000",
@@ -13,13 +13,23 @@ let envConfig = {
     mongoURI:
       "mongodb://accolite:accolite123@ds159845.mlab.com:59845/office-meals",
     sessionSecret: "mih2U7uaRE",
-    allowedDomains: ["accoliteindia.com", "accolitelabs.com"]
+    allowedDomains: ["accoliteindia.com", "accolitelabs.com", "accolite.com"]
   },
-  development: {
+  staging: {
     //hope for the best
   },
   production: {
-    //hope for the best
+    siteUrl: "http://i-learn.accolite.com",
+    port: 3300,
+    frontEnd: "http://i-learn.accolite.com",
+    googleAuth: {
+      clientID: process.env.CLIENT_ID,
+      clientSecret: process.env.CLIENT_SECRET,
+      callbackUrl: "/api/auth/google/callback"
+    },
+    mongoURI: process.env.MONGO_URI,
+    sessionSecret: process.env.SESSION_SECRET,
+    allowedDomains: ["accoliteindia.com", "accolitelabs.com", "accolite.com"]
   }
 };
 module.exports = envConfig[env];

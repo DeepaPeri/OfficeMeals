@@ -1,16 +1,16 @@
 import React, { Component } from 'react';
 import Typography from '@material-ui/core/Typography';
 
-class Home extends Component {
+class Admin extends Component {
   render() {
     return (
       <div>
         <Typography variant="h3">
-          Home
+          Admin
         </Typography>
       </div>
     );
   }
 }
 
-export default Home;
+export default Admin;
