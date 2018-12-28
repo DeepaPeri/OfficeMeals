@@ -19,9 +19,9 @@ let envConfig = {
     //hope for the best
   },
   production: {
-    siteUrl: "http://i-learn.accolite.com",
+    siteUrl: "https://meals.accolite.com",
     port: 3300,
-    frontEnd: "http://i-learn.accolite.com",
+    frontEnd: "https://meals.accolite.com",
     googleAuth: {
       clientID: process.env.CLIENT_ID,
       clientSecret: process.env.CLIENT_SECRET,

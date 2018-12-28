@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import { withStyles } from '@material-ui/core/styles';
@@ -19,29 +19,20 @@ import ListItemText from '@material-ui/core/ListItemText';
 import HomeIcon from '@material-ui/icons/Home';
 import SecurityIcon from '@material-ui/icons/Security';
 import FastFoodIcon from '@material-ui/icons/Fastfood';
-import { Route, Switch, Link } from 'react-router-dom';
+import { Route, Switch, Link, Redirect } from 'react-router-dom';
 
 import Home from './pages/Home/Home';
 import Admin from './pages/Admin/Admin';
+import NotFound from './pages/Error/404';
 import Login from './components/Login/Login';
+import Meals from './pages/Meals/Meals';
 
 const drawerWidth = 240;
-const icons = [
-  {
-    icon: <HomeIcon/>,
-    text: 'Home',
-    link: '/'
-  }, {
-    icon: <FastFoodIcon/>,
-    text: 'Food',
-    link: '/meals'
-  },
-  {
-    icon: <SecurityIcon/>,
-    text: 'Admin',
-    link: '/admin'
-  }
-];
+let icons = [{
+  icon: <HomeIcon/>,
+  text: 'Home',
+  link: '/'
+}];
 const styles = theme => ({
   root: {
     display: 'flex'
@@ -107,10 +98,43 @@ const styles = theme => ({
   }
 });
 
-class Main extends React.Component {
-  state = {
-    open: false
-  };
+class Main extends Component {
+  constructor (props) {
+    super(props);
+    this.state = {
+      open: false,
+      icons: [],
+      roles: [],
+      routeAcl: {
+        'Admin': 'admin',
+        'Meals': 'employee'
+      }
+    };
+  }
+
+  componentWillMount () {
+    let userRoles = this.props.roles;
+    console.log(icons);
+    if (userRoles.length > 0) {
+      icons.push({
+        icon: <FastFoodIcon/>,
+        text: 'Food',
+        link: '/meals'
+      });
+
+      /**
+       * Adding the admin left icon if user is admin
+       */
+      if (userRoles.indexOf('admin') > -1) {
+        icons.push({
+          icon: <SecurityIcon/>,
+          text: 'Admin',
+          link: '/admin'
+        });
+      }
+    }
+    this.setState({ icons: icons });
+  }
 
   handleDrawerOpen = () => {
     this.setState({ open: true });
@@ -121,7 +145,7 @@ class Main extends React.Component {
   };
 
   render () {
-    const { classes, theme } = this.props;
+    const { classes, theme, roles } = this.props;
     return (
       <div className={classes.root}>
         <CssBaseline/>
@@ -169,7 +193,7 @@ class Main extends React.Component {
           </div>
           <Divider/>
           <List>
-            {icons.map((icon, index) => (
+            {this.state.icons.map((icon, index) => (
               <Link to={icon.link} key={index}>
                 <ListItem button>
                   <ListItemIcon>{icon.icon}</ListItemIcon>
@@ -183,7 +207,11 @@ class Main extends React.Component {
           <div className={classes.toolbar}/>
           <Switch>
             <Route exact path="/" component={Home}/>
-            <Route exact path="/admin" component={Admin}/>
+            <PrivateRoute exact path="/meals" component={Meals} access={this.state.routeAcl.Meals}
+                          roles={roles}/>
+            <PrivateRoute exact path="/admin" component={Admin} access={this.state.routeAcl.Admin}
+                          roles={roles}/>
+            <Route component={NotFound}/>
           </Switch>
         </main>
       </div>
@@ -195,5 +223,29 @@ Main.propTypes = {
   classes: PropTypes.object.isRequired,
   theme: PropTypes.object.isRequired
 };
+
+function PrivateRoute ({ component: Component, ...rest }) {
+  return (
+    <Route
+      {...rest}
+      render={props =>
+        checkAccess(rest.access, rest.roles) ? (
+          <Component {...props} />
+        ) : (
+          <Redirect
+            to={{
+              pathname: '/',
+              state: { from: props.location }
+            }}
+          />
+        )
+      }
+    />
+  );
+}
+
+function checkAccess (access, roles) {
+  return roles.indexOf(access) > -1;
+}
 
 export default withStyles(styles, { withTheme: true })(Main);

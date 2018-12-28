@@ -15,6 +15,24 @@ router.get('/get-all-employees', (req, res, next) => {
     })
 });
 
+router.get('/get-my-roles', (req, res, next) => {
+  User.findById(req.session.user._id)
+    .exec(function (err, user) {
+      let responseObj
+      if (!err) {
+        responseObj = {
+          roles: user.roles,
+        }
+      }
+      res.locals.responseObj = {
+        err: err,
+        data: responseObj,
+        msg: 'users roles'
+      };
+      next()
+    })
+});
+
 router.get('/get-my-profile', (req, res, next) => {
   User.findById(req.session.user._id)
     .exec(function (err, user) {

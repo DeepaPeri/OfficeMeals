@@ -8,6 +8,7 @@ let ACL = {
     },
     'users': {
       'get-all-employees': ['admin'],
+      'get-my-roles': ['admin', 'employee'],
       'get-my-profile': ['admin', 'employee']
     }
   },
